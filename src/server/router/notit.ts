@@ -27,20 +27,9 @@ export const notitRouter = createRouter()
                 where: {
                     id: input,
                 },
-                select: {
-                    author: true,
-                    description: true,
-                    id: true,
-                    name: true,
-                    visibility: true,
+                include: {
                     notepages: {
-                        select: {
-                            createdAt: true,
-                            description: true,
-                            finishDate: true,
-                            finished: true,
-                            id: true,
-                            name: true,
+                        include: {
                             notes: true,
                         },
                     },
@@ -78,5 +67,97 @@ export const notitRouter = createRouter()
             });
 
             return noteblock;
+        },
+    })
+    .mutation("delete", {
+        input: z.string(),
+        async resolve({ ctx, input }) {
+            const noteblock = await ctx.prisma.noteBlock.findUnique({
+                where: {
+                    id: input,
+                },
+            });
+            if (!noteblock) {
+                throw new TRPCError({ code: "BAD_REQUEST" });
+            }
+            if (noteblock.authorId !== ctx.session.user.id) {
+                throw new TRPCError({ code: "UNAUTHORIZED" });
+            }
+
+            await ctx.prisma.noteBlock.delete({
+                where: {
+                    id: input,
+                },
+            });
+            return input;
+        },
+    })
+    .mutation("notepage.create", {
+        input: z.object({
+            noteblockId: z.string(),
+            name: z.string(),
+            index: z.number(),
+        }),
+        async resolve({ ctx, input }) {
+            const noteblock = await ctx.prisma.noteBlock.findUnique({
+                where: {
+                    id: input.noteblockId,
+                },
+            });
+
+            if (!noteblock || ctx.session.user.id !== noteblock.authorId) {
+                throw new TRPCError({ code: "UNAUTHORIZED" });
+            }
+
+            const notepage = await ctx.prisma.notePage.create({
+                data: {
+                    createdAt: new Date(),
+                    finished: false,
+                    name: input.name,
+                    index: input.index,
+                    noteblockId: input.noteblockId,
+                },
+                include: {
+                    notes: true,
+                },
+            });
+
+            return notepage;
+        },
+    })
+    .mutation("notepage.note.create", {
+        input: z.object({
+            note: z.string(),
+            index: z.number(),
+            notepageId: z.string(),
+        }),
+        async resolve({ ctx, input }) {
+            const notepage = await ctx.prisma.notePage.findUnique({
+                where: {
+                    id: input.notepageId,
+                },
+                include: {
+                    noteblock: true,
+                },
+            });
+
+            if (
+                !notepage ||
+                ctx.session.user.id !== notepage.noteblock.authorId
+            ) {
+                throw new TRPCError({ code: "UNAUTHORIZED" });
+            }
+
+            const note = await ctx.prisma.note.create({
+                data: {
+                    note: input.note,
+                    finished: false,
+                    important: false,
+                    index: input.index,
+                    notePageId: input.notepageId,
+                },
+            });
+
+            return note;
         },
     });

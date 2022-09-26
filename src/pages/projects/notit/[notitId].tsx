@@ -1,8 +1,10 @@
+import { Note, NotePage as NotePageType } from "@prisma/client";
 import { NextPage } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Header from "../../../components/common/header/Header";
+import NotePage from "../../../components/notit/NotePage";
 import { trpc } from "../../../utils/trpc";
 
 const Notit: NextPage = () => {
@@ -13,13 +15,70 @@ const Notit: NextPage = () => {
         notitId,
     ]);
 
-    const [notePages, setNotePages] = useState([]);
+    const deleteNoteBlockMutation = trpc.useMutation("notit.delete");
+    const createNotePageMutation = trpc.useMutation("notit.notepage.create");
+    const createNoteMutation = trpc.useMutation("notit.notepage.note.create");
 
-    useEffect(()=>{
-        if(data){
-            
+    const [newNotepage, setNewNotepage] = useState("");
+    const [notepages, setNotepages] = useState<
+        (NotePageType & {
+            notes: Note[];
+        })[]
+    >([]);
+
+    const addNotepage = async (e: FormEvent) => {
+        e.preventDefault();
+        if (!data) {
+            return;
         }
-    },[data])
+        const createdNotePage = await createNotePageMutation.mutateAsync({
+            name: newNotepage,
+            noteblockId: notitId,
+            index: notepages.length,
+        });
+
+        setNotepages([...notepages, createdNotePage]);
+        setNewNotepage("");
+    };
+
+    const addNewNote = async (
+        notepageId: string,
+        note: string,
+        index: number
+    ) => {
+        const createdNote = await createNoteMutation.mutateAsync({
+            index,
+            note,
+            notepageId,
+        });
+
+        setNotepages(
+            notepages.map((n) => {
+                if (n.id !== notepageId) {
+                    return n;
+                }
+
+                return {
+                    ...n,
+                    notes: [...n.notes, createdNote],
+                };
+            })
+        );
+    };
+
+    useEffect(() => {
+        //set notepages when data comes in
+        if (data) {
+            setNotepages(data.notepages);
+        }
+    }, [data]);
+
+    useEffect(() => {
+        //when deleting this noteblock redirect to home
+        if (deleteNoteBlockMutation.isSuccess) {
+            router.push("/projects/notit");
+        }
+    }, [deleteNoteBlockMutation.isSuccess, router]);
 
     if (isLoading) {
         return <div>Loading...</div>;
@@ -38,9 +97,27 @@ const Notit: NextPage = () => {
             </Head>
             <Header />
             <main className="">
-                <h1>{data.name}</h1>
+                <h1 onClick={() => deleteNoteBlockMutation.mutate(notitId)}>
+                    {data.name}
+                </h1>
                 <hr />
-                <div></div>
+                <div className="flex">
+                    {notepages.map((notepage) => (
+                        <NotePage
+                            key={notepage.id}
+                            notepage={notepage}
+                            addNewNote={addNewNote}
+                        />
+                    ))}
+                    <form onSubmit={addNotepage}>
+                        <input
+                            className="bg-gray-200"
+                            type="text"
+                            value={newNotepage}
+                            onChange={(e) => setNewNotepage(e.target.value)}
+                        />
+                    </form>
+                </div>
             </main>
         </>
     );
