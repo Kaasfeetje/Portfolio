@@ -1,0 +1,174 @@
+.hand {
+    background-color: #ffdbac;
+    width: 100%;
+    height: 100%;
+    border-radius: 10%;
+    position: relative;
+    margin-top: 25%;
+}
+
+.hand > div {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.finger {
+    position: absolute;
+    left: 90%;
+    width: 100%;
+    height: 20%;
+    background-color: #f1c27d;
+    border-radius: 0 100% 100% 0;
+}
+
+.finger.pinky {
+    top: 80%;
+    width: 20%;
+}
+
+.finger.ring {
+    top: 55%;
+    width: 20%;
+}
+
+.finger.middle {
+    top: 30%;
+    width: 20%;
+}
+
+.finger.pointy {
+    top: 5%;
+    width: 20%;
+}
+
+.finger.thumb {
+    left: 10%;
+    top: -15%;
+    width: 100%;
+    border-radius: 100% 100% 100% 0;
+}
+
+.finger.pinky.paper {
+    animation: pinky-finger-paper 0.5s linear forwards;
+}
+
+.finger.ring.paper {
+    animation: ring-finger-paper 0.5s linear forwards;
+}
+.finger.middle.paper {
+    animation: middle-finger-paper 0.5s linear forwards;
+}
+.finger.pointy.paper {
+    animation: pointy-finger-paper 0.5s linear forwards;
+}
+.finger.thumb.paper {
+    animation: thumb-paper 0.5s linear forwards;
+}
+
+@keyframes pinky-finger-paper {
+    100% {
+        width: 75%;
+    }
+}
+
+@keyframes ring-finger-paper {
+    100% {
+        width: 95%;
+    }
+}
+
+@keyframes middle-finger-paper {
+    100% {
+        width: 100%;
+    }
+}
+
+@keyframes pointy-finger-paper {
+    100% {
+        width: 90%;
+    }
+}
+
+@keyframes thumb-paper {
+    100% {
+        left: 10%;
+        top: -15%;
+        width: 125%;
+    }
+}
+
+.finger.thumb.stone {
+    animation: thumb-stone 0.5s linear forwards;
+}
+
+@keyframes thumb-stone {
+    100% {
+        transform: rotateZ(90deg);
+        transform-origin: bottom left;
+        width: 100%;
+        top: -20%;
+        opacity: 0;
+    }
+}
+
+.finger.pointy.scissors {
+    animation: pointy-finger-scissors 0.5s linear forwards;
+}
+
+.finger.middle.scissors {
+    animation: middle-finger-scissors 0.5s linear forwards;
+}
+
+@keyframes pointy-finger-scissors {
+    100% {
+        width: 90%;
+        transform: rotateZ(-15deg);
+        transform-origin: top left;
+    }
+}
+
+@keyframes middle-finger-scissors {
+    100% {
+        width: 100%;
+        transform: rotateZ(10deg);
+        transform-origin: bottom left;
+    }
+}
+
+.hand.rolling {
+    animation: hand-rolling 0.5s alternate infinite;
+}
+
+.hand.rolling.left {
+    animation: hand-rolling-left 0.5s alternate infinite;
+}
+
+@keyframes hand-rolling {
+    0% {
+        transform: rotateZ(0deg);
+    }
+
+    90% {
+        transform: rotateZ(45deg);
+    }
+    100% {
+        transform: rotateZ(45deg);
+    }
+}
+
+@keyframes hand-rolling-left {
+    0% {
+        transform: rotateZ(0deg);
+    }
+    90% {
+        transform: rotateZ(-45deg);
+    }
+    100% {
+        transform: rotateZ(-45deg);
+    }
+}
+
+.hand .left {
+    transform: scaleX(-1);
+}
