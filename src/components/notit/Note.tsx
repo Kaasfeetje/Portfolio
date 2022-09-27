@@ -28,7 +28,10 @@ const Note = ({
             className={`p-2 rounded-lg my-2 border-b-4 select-none cursor-pointer ${
                 note.finished ? "border-green-500" : ""
             } ${isHovering ? "border-4" : ""}`}
-            onMouseDown={() => setDraggedNote(note)}
+            onMouseDown={(e) => {
+                setDraggedNote(note);
+                e.stopPropagation();
+            }}
             onMouseUp={(e) => {
                 e.stopPropagation();
                 onDrop({ type: "note", id: note.id });
@@ -38,7 +41,7 @@ const Note = ({
                 e.stopPropagation();
                 if (draggedNote) setIsHovering(true);
             }}
-            onMouseLeave={(e) => {
+            onMouseLeave={() => {
                 setIsHovering(false);
             }}
             onClick={(e) => {

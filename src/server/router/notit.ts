@@ -229,6 +229,70 @@ export const notitRouter = createRouter()
             };
         },
     })
+    .mutation("swapNotePage", {
+        input: z.object({
+            notepageA: z.string(),
+            notepageB: z.string(),
+        }),
+        async resolve({ ctx, input }) {
+            const notepageA = await ctx.prisma.notePage.findUnique({
+                where: {
+                    id: input.notepageA,
+                },
+                select: {
+                    index: true,
+                    noteblock: {
+                        select: {
+                            authorId: true,
+                        },
+                    },
+                },
+            });
+
+            if (
+                !notepageA ||
+                ctx.session.user.id !== notepageA.noteblock.authorId
+            ) {
+                throw new TRPCError({ code: "UNAUTHORIZED" });
+            }
+
+            const notepageB = await ctx.prisma.notePage.findUnique({
+                where: {
+                    id: input.notepageB,
+                },
+            });
+
+            if (!notepageB) {
+                throw new TRPCError({ code: "BAD_REQUEST" });
+            }
+
+            const updatedNotepageA = await ctx.prisma.notePage.update({
+                where: {
+                    id: input.notepageA,
+                },
+                data: {
+                    index: notepageB.index,
+                },
+                include: {
+                    notes: true,
+                },
+            });
+
+            const updatedNotepageB = await ctx.prisma.notePage.update({
+                where: {
+                    id: input.notepageB,
+                },
+                data: {
+                    index: notepageA.index,
+                },
+                include: {
+                    notes: true,
+                },
+            });
+
+            return { a: updatedNotepageA, b: updatedNotepageB };
+        },
+    })
     .mutation("notepage.create", {
         input: z.object({
             noteblockId: z.string(),

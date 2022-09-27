@@ -21,6 +21,7 @@ const Notit: NextPage = () => {
     const deleteNoteBlockMutation = trpc.useMutation("notit.delete");
     const swapNotesMutation = trpc.useMutation("notit.swapNotes");
     const swapNoteToPageMutation = trpc.useMutation("notit.swapNoteToPage");
+    const swapNotePageMutation = trpc.useMutation("notit.swapNotePage");
     const createNotePageMutation = trpc.useMutation("notit.notepage.create");
     const updateNotePageMutation = trpc.useMutation("notit.notepage.update");
     const deleteNotePageMutation = trpc.useMutation("notit.notepage.delete");
@@ -40,6 +41,9 @@ const Notit: NextPage = () => {
     >([]);
 
     const [draggedNote, setDraggedNote] = useState<Note | undefined>();
+    const [draggedNotePage, setDraggedNotePage] = useState<
+        NotePageType | undefined
+    >();
 
     const addNewNote = async (
         notepageId: string,
@@ -238,6 +242,33 @@ const Notit: NextPage = () => {
         setDraggedNote(undefined);
     };
 
+    const swapNotePage = async (
+        notepageA: string,
+        notepageB: string | undefined
+    ) => {
+        if (!notepageB) return;
+        if (notepageA === notepageB) return;
+
+        const { a, b } = await swapNotePageMutation.mutateAsync({
+            notepageA,
+            notepageB,
+        });
+
+        setNotepages(
+            notepages
+                .map((n) => {
+                    if (a.id === n.id) {
+                        return a;
+                    }
+                    if (b.id === n.id) {
+                        return b;
+                    }
+                    return n;
+                })
+                .sort((_a, _b) => _a.index - _b.index)
+        );
+    };
+
     useEffect(() => {
         //set notepages when data comes in
         if (data) {
@@ -266,6 +297,7 @@ const Notit: NextPage = () => {
             className="min-h-screen"
             onMouseUp={() => {
                 setDraggedNote(undefined);
+                setDraggedNotePage(undefined);
             }}
         >
             <Head>
@@ -299,9 +331,7 @@ const Notit: NextPage = () => {
                             deleteNote={deleteNote}
                             updateNotePage={updateNotePage}
                             deleteNotePage={deleteNotePage}
-                            setDraggedNote={(note) => {
-                                setDraggedNote(note);
-                            }}
+                            setDraggedNote={setDraggedNote}
                             draggedNote={draggedNote}
                             onDrop={(drop) => {
                                 if (drop.type === "note") {
@@ -311,6 +341,17 @@ const Notit: NextPage = () => {
                                     swapNoteToPage(draggedNote, drop.id);
                                     setDraggedNote(undefined);
                                 }
+                            }}
+                            setDraggedNotePage={(
+                                notepage: NotePageType | undefined
+                            ) => {
+                                setDraggedNotePage(notepage);
+                                console.log("updated", notepage?.name);
+                            }}
+                            draggedNotePage={draggedNotePage}
+                            onDropNotePage={(notepageId) => {
+                                swapNotePage(notepageId, draggedNotePage?.id);
+                                setDraggedNotePage(undefined);
                             }}
                         />
                     ))}

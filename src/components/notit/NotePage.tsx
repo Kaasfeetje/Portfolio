@@ -16,6 +16,9 @@ type PropTypes = {
     setDraggedNote: (note: NoteType | undefined) => void;
     draggedNote: NoteType | undefined;
     onDrop: (drop: { type: "note" | "notepage"; id: string }) => void;
+    setDraggedNotePage: (notepage: NotePage | undefined) => void;
+    draggedNotePage: NotePage | undefined;
+    onDropNotePage: (notepageId: string) => void;
 };
 
 const NotePage = ({
@@ -28,6 +31,9 @@ const NotePage = ({
     setDraggedNote,
     draggedNote,
     onDrop,
+    setDraggedNotePage,
+    draggedNotePage,
+    onDropNotePage,
 }: PropTypes) => {
     const [newNote, setNewNote] = useState("");
     const [notes, setNotes] = useState<NoteType[]>([]);
@@ -43,22 +49,31 @@ const NotePage = ({
 
     return (
         <div
-            className={`mx-2 border-2 border-gray-300 rounded-lg p-4 ${
+            className={`mx-2 border-2  rounded-lg p-4 select-none cursor-pointer ${
                 isHovering ? "bg-blue-50" : ""
-            }`}
+            } ${notepage.finished ? "border-green-500" : "border-gray-300"}`}
+            onMouseDown={(e) => {
+                e.stopPropagation();
+                setDraggedNotePage(notepage);
+            }}
             onMouseUp={(e) => {
                 e.stopPropagation();
-                onDrop({ type: "notepage", id: notepage.id });
+                if (draggedNote) onDrop({ type: "notepage", id: notepage.id });
+                if (draggedNotePage) onDropNotePage(notepage.id);
                 setIsHovering(false);
             }}
             onMouseEnter={() => {
-                if (draggedNote) setIsHovering(true);
+                if (draggedNote || draggedNotePage) setIsHovering(true);
             }}
             onMouseLeave={() => {
                 setIsHovering(false);
             }}
+            onClick={(e) => {
+                setIsOpen(true);
+                e.stopPropagation();
+            }}
         >
-            <h2 onClick={() => setIsOpen(true)}>{notepage.name}</h2>
+            <h2>{notepage.name}</h2>
             <form
                 onSubmit={(e) => {
                     e.preventDefault();
