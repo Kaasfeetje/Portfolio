@@ -7,22 +7,42 @@ type PropTypes = {
     note: Note;
     updateNote: (note: Note) => void;
     deleteNote: (noteId: string) => void;
-    onDragStart: (note: Note) => void;
-    onDrop: (note: Note) => void;
+    setDraggedNote: (note: Note | undefined) => void;
+    draggedNote: Note | undefined;
+    onDrop: (drop: { type: "note" | "notepage"; id: string }) => void;
 };
 
-const Note = ({ note, updateNote, deleteNote,onDragStart, onDrop }: PropTypes) => {
+const Note = ({
+    note,
+    updateNote,
+    deleteNote,
+    setDraggedNote,
+    draggedNote,
+    onDrop,
+}: PropTypes) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [isHovering, setIsHovering] = useState(false);
 
     return (
         <li
-            className={`${note.finished ? "bg-green-500" : ""}`}
-            draggable
-            onDragStart={() => onDragStart(note)}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={() => onDrop(note)}
+            className={`p-2 rounded-lg my-2 border-b-4 select-none cursor-pointer ${
+                note.finished ? "border-green-500" : ""
+            } ${isHovering ? "border-4" : ""}`}
+            onMouseDown={() => setDraggedNote(note)}
+            onMouseUp={(e) => {
+                e.stopPropagation();
+                onDrop({ type: "note", id: note.id });
+                setDraggedNote(undefined);
+            }}
+            onMouseEnter={(e) => {
+                e.stopPropagation();
+                if (draggedNote) setIsHovering(true);
+            }}
+            onMouseLeave={(e) => {
+                setIsHovering(false);
+            }}
             onClick={(e) => {
-                setIsOpen(!isOpen);
+                if (!draggedNote) setIsOpen(!isOpen);
                 e.stopPropagation();
             }}
         >

@@ -13,9 +13,9 @@ type PropTypes = {
     deleteNote: (noteId: string) => void;
     updateNotePage: (notepage: NotePage) => void;
     deleteNotePage: (notepageId: string) => void;
-    setDraggedNote: (note: NoteType) => void;
-    onDrop: (note: NoteType) => void;
-    onDropPage: (pageId: string, index: number) => void;
+    setDraggedNote: (note: NoteType | undefined) => void;
+    draggedNote: NoteType | undefined;
+    onDrop: (drop: { type: "note" | "notepage"; id: string }) => void;
 };
 
 const NotePage = ({
@@ -26,11 +26,12 @@ const NotePage = ({
     updateNotePage,
     deleteNotePage,
     setDraggedNote,
-    onDropPage,
+    draggedNote,
     onDrop,
 }: PropTypes) => {
     const [newNote, setNewNote] = useState("");
     const [notes, setNotes] = useState<NoteType[]>([]);
+    const [isHovering, setIsHovering] = useState(false);
 
     const [isOpen, setIsOpen] = useState(false);
 
@@ -42,12 +43,22 @@ const NotePage = ({
 
     return (
         <div
-            className="mx-2 border-2 border-gray-300 rounded-lg p-4 "
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={() => onDropPage(notepage.id, notepage.notes.length)}
-            onClick={() => setIsOpen(true)}
+            className={`mx-2 border-2 border-gray-300 rounded-lg p-4 ${
+                isHovering ? "bg-blue-50" : ""
+            }`}
+            onMouseUp={(e) => {
+                e.stopPropagation();
+                onDrop({ type: "notepage", id: notepage.id });
+                setIsHovering(false);
+            }}
+            onMouseEnter={() => {
+                if (draggedNote) setIsHovering(true);
+            }}
+            onMouseLeave={() => {
+                setIsHovering(false);
+            }}
         >
-            <h2>{notepage.name}</h2>
+            <h2 onClick={() => setIsOpen(true)}>{notepage.name}</h2>
             <form
                 onSubmit={(e) => {
                     e.preventDefault();
@@ -70,7 +81,8 @@ const NotePage = ({
                         note={n}
                         updateNote={updateNote}
                         deleteNote={deleteNote}
-                        onDragStart={setDraggedNote}
+                        setDraggedNote={setDraggedNote}
+                        draggedNote={draggedNote}
                         onDrop={onDrop}
                     />
                 ))}

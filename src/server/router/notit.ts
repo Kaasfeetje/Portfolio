@@ -69,6 +69,36 @@ export const notitRouter = createRouter()
             return noteblock;
         },
     })
+    .mutation("update", {
+        input: z.object({
+            id: z.string(),
+            name: z.string(),
+            description: z.string().nullish(),
+            visibility: z.nativeEnum(Visibility),
+        }),
+        async resolve({ ctx, input }) {
+            const noteblock = await ctx.prisma.noteBlock.findUnique({
+                where: {
+                    id: input.id,
+                },
+            });
+
+            if (!noteblock || ctx.session.user.id !== noteblock.authorId) {
+                throw new TRPCError({ code: "UNAUTHORIZED" });
+            }
+
+            const updatedNoteblock = await ctx.prisma.noteBlock.update({
+                where: {
+                    id: input.id,
+                },
+                data: {
+                    ...input,
+                },
+            });
+
+            return updatedNoteblock;
+        },
+    })
     .mutation("delete", {
         input: z.string(),
         async resolve({ ctx, input }) {
@@ -155,7 +185,6 @@ export const notitRouter = createRouter()
         input: z.object({
             noteId: z.string(),
             notepageId: z.string(),
-            index: z.number(),
         }),
         async resolve({ ctx, input }) {
             const note = await ctx.prisma.note.findUnique({
@@ -178,13 +207,19 @@ export const notitRouter = createRouter()
                 throw new TRPCError({ code: "UNAUTHORIZED" });
             }
 
+            const noteIndex = await ctx.prisma.note.count({
+                where: {
+                    notePageId: input.notepageId,
+                },
+            });
+
             const updatedNote = await ctx.prisma.note.update({
                 where: {
                     id: input.noteId,
                 },
                 data: {
                     notePageId: input.notepageId,
-                    index: input.index,
+                    index: noteIndex,
                 },
             });
 
