@@ -92,6 +92,108 @@ export const notitRouter = createRouter()
             return input;
         },
     })
+    .mutation("swapNotes", {
+        input: z.object({
+            noteA: z.string(),
+            noteB: z.string(),
+        }),
+        async resolve({ ctx, input }) {
+            const noteA = await ctx.prisma.note.findUnique({
+                where: {
+                    id: input.noteA,
+                },
+                include: {
+                    notePage: {
+                        include: {
+                            noteblock: true,
+                        },
+                    },
+                },
+            });
+
+            if (
+                !noteA ||
+                ctx.session.user.id !== noteA.notePage.noteblock.authorId
+            ) {
+                throw new TRPCError({ code: "UNAUTHORIZED" });
+            }
+
+            const noteB = await ctx.prisma.note.findUnique({
+                where: {
+                    id: input.noteB,
+                },
+            });
+
+            if (!noteB) {
+                throw new TRPCError({ code: "BAD_REQUEST" });
+            }
+
+            const updatedA = await ctx.prisma.note.update({
+                where: {
+                    id: noteA.id,
+                },
+                data: {
+                    notePageId: noteB.notePageId,
+                    index: noteB.index,
+                },
+            });
+
+            const updatedB = await ctx.prisma.note.update({
+                where: {
+                    id: noteB.id,
+                },
+                data: {
+                    notePageId: noteA.notePageId,
+                    index: noteA.index,
+                },
+            });
+
+            return { a: updatedA, b: updatedB };
+        },
+    })
+    .mutation("swapNoteToPage", {
+        input: z.object({
+            noteId: z.string(),
+            notepageId: z.string(),
+            index: z.number(),
+        }),
+        async resolve({ ctx, input }) {
+            const note = await ctx.prisma.note.findUnique({
+                where: {
+                    id: input.noteId,
+                },
+                include: {
+                    notePage: {
+                        include: {
+                            noteblock: true,
+                        },
+                    },
+                },
+            });
+
+            if (
+                !note ||
+                ctx.session.user.id !== note.notePage.noteblock.authorId
+            ) {
+                throw new TRPCError({ code: "UNAUTHORIZED" });
+            }
+
+            const updatedNote = await ctx.prisma.note.update({
+                where: {
+                    id: input.noteId,
+                },
+                data: {
+                    notePageId: input.notepageId,
+                    index: input.index,
+                },
+            });
+
+            return {
+                oldNotePageId: note.notePageId,
+                note: updatedNote,
+            };
+        },
+    })
     .mutation("notepage.create", {
         input: z.object({
             noteblockId: z.string(),
@@ -123,6 +225,83 @@ export const notitRouter = createRouter()
             });
 
             return notepage;
+        },
+    })
+    .mutation("notepage.update", {
+        input: z.object({
+            id: z.string(),
+            name: z.string(),
+            description: z.string().nullish(),
+            finishDate: z.date().nullish(),
+            targetDate: z.date().nullish(),
+            finished: z.boolean(),
+        }),
+        async resolve({ ctx, input }) {
+            const notepage = await ctx.prisma.notePage.findUnique({
+                where: {
+                    id: input.id,
+                },
+                select: {
+                    noteblock: {
+                        select: {
+                            authorId: true,
+                        },
+                    },
+                },
+            });
+
+            if (
+                !notepage ||
+                ctx.session.user.id !== notepage.noteblock.authorId
+            ) {
+                throw new TRPCError({ code: "UNAUTHORIZED" });
+            }
+
+            const updatedNotepage = await ctx.prisma.notePage.update({
+                where: {
+                    id: input.id,
+                },
+                data: {
+                    ...input,
+                },
+                include: {
+                    notes: true,
+                },
+            });
+
+            return updatedNotepage;
+        },
+    })
+    .mutation("notepage.delete", {
+        input: z.string(),
+        async resolve({ ctx, input }) {
+            const notepage = await ctx.prisma.notePage.findUnique({
+                where: {
+                    id: input,
+                },
+                select: {
+                    noteblock: {
+                        select: {
+                            authorId: true,
+                        },
+                    },
+                },
+            });
+
+            if (
+                !notepage ||
+                ctx.session.user.id !== notepage.noteblock.authorId
+            ) {
+                throw new TRPCError({ code: "UNAUTHORIZED" });
+            }
+
+            await ctx.prisma.notePage.delete({
+                where: {
+                    id: input,
+                },
+            });
+
+            return input;
         },
     })
     .mutation("notepage.note.create", {
@@ -159,5 +338,88 @@ export const notitRouter = createRouter()
             });
 
             return note;
+        },
+    })
+    .mutation("notepage.note.update", {
+        input: z.object({
+            id: z.string(),
+            note: z.string(),
+            finished: z.boolean(),
+            important: z.boolean(),
+            index: z.number(),
+        }),
+        async resolve({ ctx, input }) {
+            const note = await ctx.prisma.note.findUnique({
+                where: {
+                    id: input.id,
+                },
+                select: {
+                    notePage: {
+                        select: {
+                            noteblock: {
+                                select: {
+                                    authorId: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            });
+
+            if (
+                !note ||
+                ctx.session.user.id !== note.notePage.noteblock.authorId
+            ) {
+                throw new TRPCError({ code: "UNAUTHORIZED" });
+            }
+
+            const updatedNote = await ctx.prisma.note.update({
+                where: {
+                    id: input.id,
+                },
+                data: { ...input },
+            });
+
+            return updatedNote;
+        },
+    })
+    .mutation("notepage.note.delete", {
+        input: z.string(),
+        async resolve({ ctx, input }) {
+            const note = await ctx.prisma.note.findUnique({
+                where: {
+                    id: input,
+                },
+                select: {
+                    notePage: {
+                        select: {
+                            id: true,
+                            noteblock: {
+                                select: {
+                                    authorId: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            });
+
+            if (
+                !note ||
+                ctx.session.user.id !== note.notePage.noteblock.authorId
+            ) {
+                throw new TRPCError({ code: "UNAUTHORIZED" });
+            }
+
+            await ctx.prisma.note.delete({
+                where: {
+                    id: input,
+                },
+            });
+
+            return {
+                notepageId: note.notePage.id,
+                deletedId: input,
+            };
         },
     });
