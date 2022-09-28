@@ -14,7 +14,7 @@ const Modal = ({ isOpen, setIsOpen, children }: PropTypes) => {
                 e.stopPropagation();
             }}
             onMouseDown={(e) => e.stopPropagation()}
-            className="absolute top-0 left-0 w-screen h-screen flex justify-center items-center"
+            className="fixed top-0 left-0 w-screen h-screen flex justify-center items-center"
         >
             <div className="bg-black opacity-10 w-full h-full absolute top-0 left-0 -z-10"></div>
             {isOpen && children}

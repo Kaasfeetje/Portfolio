@@ -70,7 +70,11 @@ const Notit: NextPage = () => {
         );
     };
 
-    const updateNote = async (note: Note) => {
+    const updateNote = async (
+        note: Note,
+        swapWith: string | undefined,
+        moveTo: string | undefined
+    ) => {
         const updatedNote = await updateNoteMutation.mutateAsync({ ...note });
 
         setNotepages(
@@ -89,6 +93,18 @@ const Notit: NextPage = () => {
                 return notepage;
             })
         );
+
+        if (swapWith && moveTo) {
+            return swapNotes(swapWith, note.id);
+        }
+
+        if (swapWith) {
+            return swapNotes(swapWith, note.id);
+        }
+
+        if (moveTo) {
+            return swapNoteToPage(note, moveTo);
+        }
     };
 
     const deleteNote = async (noteId: string) => {
@@ -126,7 +142,10 @@ const Notit: NextPage = () => {
         setNewNotepage("");
     };
 
-    const updateNotePage = async (notepage: NotePageType) => {
+    const updateNotePage = async (
+        notepage: NotePageType,
+        swapWith: string | undefined
+    ) => {
         const updatedNotePage = await updateNotePageMutation.mutateAsync({
             ...notepage,
         });
@@ -139,6 +158,10 @@ const Notit: NextPage = () => {
                 return notepage;
             })
         );
+
+        if (swapWith) {
+            swapNotePage(notepage.id, swapWith);
+        }
     };
 
     const deleteNotePage = async (notepageId: string) => {
@@ -272,7 +295,7 @@ const Notit: NextPage = () => {
     useEffect(() => {
         //set notepages when data comes in
         if (data) {
-            setNotepages(data.notepages);
+            setNotepages(data.notepages.sort((a, b) => a.index - b.index));
             setNoteBlock({ ...data });
         }
     }, [data]);
@@ -294,7 +317,7 @@ const Notit: NextPage = () => {
 
     return (
         <div
-            className="min-h-screen"
+            className="min-h-screen max-h-screen overflow-y-hidden"
             onMouseUp={() => {
                 setDraggedNote(undefined);
                 setDraggedNotePage(undefined);
@@ -306,8 +329,13 @@ const Notit: NextPage = () => {
                 <link rel="icon" href="/favicon.ico" />
             </Head>
             <Header />
-            <main className="overflow-x-auto">
-                <h1 onClick={() => setIsOpen(true)}>{noteblock.name}</h1>
+            <main className="text-gray-800">
+                <h1
+                    className="w-max m-4 mx-6 mb-2 text-2xl font-semibold cursor-pointer"
+                    onClick={() => setIsOpen(true)}
+                >
+                    {noteblock.name}
+                </h1>
                 {isOpen && (
                     <Modal isOpen={isOpen} setIsOpen={setIsOpen}>
                         <NoteBlockModal
@@ -320,8 +348,7 @@ const Notit: NextPage = () => {
                         />
                     </Modal>
                 )}
-                <hr />
-                <div className="flex">
+                <div className="flex overflow-x-auto">
                     {notepages.map((notepage) => (
                         <NotePage
                             key={notepage.id}
@@ -353,12 +380,18 @@ const Notit: NextPage = () => {
                                 swapNotePage(notepageId, draggedNotePage?.id);
                                 setDraggedNotePage(undefined);
                             }}
+                            swapNotepageOptions={notepages
+                                .filter((n) => n.id !== notepage.id)
+                                .map((n) => ({ id: n.id, name: n.name }))}
                         />
                     ))}
-                    <form onSubmit={addNotepage}>
+                    <form
+                        onSubmit={addNotepage}
+                        className="mx-2 border-2  rounded-lg p-4"
+                    >
                         <input
-                            placeholder="Notepage..."
-                            className="bg-gray-200"
+                            placeholder="Add note page..."
+                            className="bg-gray-200 p-2 rounded-lg flex-1"
                             type="text"
                             value={newNotepage}
                             onChange={(e) => setNewNotepage(e.target.value)}

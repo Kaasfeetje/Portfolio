@@ -15,6 +15,9 @@ export const notitRouter = createRouter()
                         { visibility: Visibility.PUBLIC },
                     ],
                 },
+                include: {
+                    author: true,
+                },
             });
 
             return noteblocks;

@@ -1,3 +1,4 @@
+import { Visibility } from "@prisma/client";
 import { NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
@@ -23,17 +24,34 @@ const Notit: NextPage = () => {
                 <link rel="icon" href="/favicon.ico" />
             </Head>
             <Header />
-            <main className="">
-                <Link href="/projects/notit/new">Create Note Block</Link>
-                <div>
-                    {data.map((noteblock) => (
-                        <div key={noteblock.id}>
-                            <Link href={`/projects/notit/${noteblock.id}`}>
-                                {noteblock.name}
-                            </Link>
-                        </div>
-                    ))}
+            <main className="p-4 border-2 border-gray-300 m-4 rounded-lg text-gray-800 md:w-1/2 md:mx-auto lg:w-1/3">
+                <div className="flex justify-between items-center border-b-2 border-gray-300">
+                    <h1 className="text-xl font-semibold">Noteblocks</h1>
+                    <Link href="/projects/notit/new">
+                        <button className="text-blue-500 cursor-pointer">
+                            Create Note Block
+                        </button>
+                    </Link>
                 </div>
+                <ul>
+                    {data.map((noteblock) => (
+                        <li key={noteblock.id} className="my-2">
+                            <Link href={`/projects/notit/${noteblock.id}`}>
+                                <h2 className="font-semibold text-lg cursor-pointer">
+                                    {noteblock.name}&#x28;
+                                    <span className="text-base">
+                                        {noteblock.visibility ===
+                                        Visibility.PUBLIC
+                                            ? "Public"
+                                            : "Private"}
+                                    </span>
+                                    &#x29;
+                                </h2>
+                            </Link>
+                            <p>{noteblock.description}</p>
+                        </li>
+                    ))}
+                </ul>
             </main>
         </>
     );

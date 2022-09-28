@@ -58,25 +58,27 @@ const NoteBlockModal = ({
                 </button>
             </div>
             <form onSubmit={onSave}>
-                <div>
+                <div className="mb-4">
                     <label htmlFor="name">Name: </label>
                     <input
+                        className="bg-gray-200 p-2 rounded-lg flex-1 ml-4"
                         id="name"
                         type="text"
                         value={_name}
                         onChange={(e) => _setName(e.target.value)}
                     />
                 </div>
-                <div>
+                <div className="mb-4">
                     <label htmlFor="description">Description: </label>
                     <input
+                        className="bg-gray-200 p-2 rounded-lg flex-1 ml-4"
                         id="description"
                         type="text"
                         value={_description}
                         onChange={(e) => _setDescription(e.target.value)}
                     />
                 </div>
-                <div>
+                <div className="mb-4">
                     <label htmlFor="visibility">Visibility: </label>
                     <select
                         id="visibility"

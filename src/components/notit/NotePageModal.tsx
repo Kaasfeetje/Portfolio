@@ -5,9 +5,10 @@ import React, { FormEvent, useEffect, useState } from "react";
 
 type PropTypes = {
     notepage: NotePage;
-    updateNotePage: (notepage: NotePage) => void;
+    updateNotePage: (notepage: NotePage, swapWith: string | undefined) => void;
     deleteNotePage: (notepageId: string) => void;
     onClose: () => void;
+    swapNotepageOptions: { id: string; name: string }[];
 };
 
 const NotePageModal = ({
@@ -15,6 +16,7 @@ const NotePageModal = ({
     updateNotePage,
     deleteNotePage,
     onClose,
+    swapNotepageOptions,
 }: PropTypes) => {
     const [_name, _setName] = useState("");
     const [_description, _setDescription] = useState("");
@@ -25,6 +27,7 @@ const NotePageModal = ({
         undefined
     );
     const [_finished, _setFinished] = useState(false);
+    const [swapWith, setSwapWith] = useState<string | undefined>(undefined);
 
     useEffect(() => {
         if (notepage) {
@@ -38,17 +41,20 @@ const NotePageModal = ({
 
     const onSave = (e: FormEvent) => {
         e.preventDefault();
-        updateNotePage({
-            id: notepage.id,
-            createdAt: notepage.createdAt,
-            description: _description,
-            finishDate: _finishDate ? new Date(_finishDate) : null,
-            targetDate: _targetDate ? new Date(_targetDate) : null,
-            finished: _finished,
-            index: notepage.index,
-            name: _name,
-            noteblockId: notepage.noteblockId,
-        });
+        updateNotePage(
+            {
+                id: notepage.id,
+                createdAt: notepage.createdAt,
+                description: _description,
+                finishDate: _finishDate ? new Date(_finishDate) : null,
+                targetDate: _targetDate ? new Date(_targetDate) : null,
+                finished: _finished,
+                index: notepage.index,
+                name: _name,
+                noteblockId: notepage.noteblockId,
+            },
+            swapWith
+        );
         onClose();
     };
 
@@ -116,6 +122,22 @@ const NotePageModal = ({
                         value={_targetDate?.toString()}
                         onChange={(e) => _setTargetDate(e.target.value)}
                     />
+                </div>
+                <div className="flex items-center mb-4">
+                    <label htmlFor="swapwith">Swap with: </label>
+                    <select
+                        className="ml-2 w-24"
+                        id="swapwith"
+                        value={swapWith}
+                        onChange={(e) => setSwapWith(e.target.value)}
+                    >
+                        <option value={undefined}>None</option>
+                        {swapNotepageOptions.map((o) => (
+                            <option key={o.id} value={o.id}>
+                                {o.name}
+                            </option>
+                        ))}
+                    </select>
                 </div>
                 <div className="flex justify-evenly items-center mt-4">
                     <button
