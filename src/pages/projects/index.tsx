@@ -37,6 +37,12 @@ const Projects: NextPage = () => {
                     </Link>
                     <p>A place to keep your notes</p>
                 </div>
+                <div className="m-2 p-2 border-gray-600 border-2">
+                    <Link href="/projects/stopwatch">
+                        <h3>Stopwatch</h3>
+                    </Link>
+                    <p>For all your stopwatching needs.</p>
+                </div>
             </main>
         </>
     );
