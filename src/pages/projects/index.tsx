@@ -43,6 +43,12 @@ const Projects: NextPage = () => {
                     </Link>
                     <p>For all your stopwatching needs.</p>
                 </div>
+                <div className="m-2 p-2 border-gray-600 border-2">
+                    <Link href="/projects/qrcode">
+                        <h3>QR Code</h3>
+                    </Link>
+                    <p>QR Code reader and generator.</p>
+                </div>
             </main>
         </>
     );

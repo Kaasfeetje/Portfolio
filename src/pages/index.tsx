@@ -1,12 +1,8 @@
 import type { NextPage } from "next";
 import Head from "next/head";
-import Link from "next/link";
-import { trpc } from "../utils/trpc";
 import Header from "../components/common/header/Header";
 
 const Home: NextPage = () => {
-    const hello = trpc.useQuery(["example.hello", { text: "from tRPC" }]);
-
     return (
         <>
             <Head>
